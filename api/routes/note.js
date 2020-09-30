@@ -1,9 +1,21 @@
 const express = require('express');
-const Note    = require('../models/Note');
-
 const router = express.Router();
 
-// GET /notes (todas las notas)
+const Note = require('../models/Note');
+
+// POST /notes
+router.post('/notes', (req, res, next) => {
+  const note = new Note({
+    title: req.body.title,
+    text: req.body.text
+  });
+  note.save((err, note) => {
+    if (err) return next(err);
+    res.status(201).json(note);
+  });
+});
+
+// GET /notes
 router.get('/notes', (req, res, next) => {
   Note.find()                  // todos los docs de notes
     .select('_id title text')  // como SELECT en SQL
@@ -20,9 +32,9 @@ router.get('/notes', (req, res, next) => {
         }
       }));
       res.status(200).json({
-        count: notes.length,
+        count: notes.length,   // la cantidad de elementos en notes
         notes: notes,
-        create: {
+        create: {              // como crear una nota
           method: 'POST',
           url: `${req.protocol}://${req.hostname}:3000/api/notes`
         }
@@ -51,18 +63,6 @@ router.get('/notes/:id', (req, res, next) => {
         }
       });
     });
-});
-
-// POST /notes
-router.post('/notes', (req, res, next) => {
-  const note = new Note({
-    title: req.body.title,
-    text: req.body.text
-  });
-  note.save((err, note) => {
-    if (err) return next(err);
-    res.status(201).json(note);
-  });
 });
 
 // PUT /notes/id

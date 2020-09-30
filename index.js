@@ -1,4 +1,3 @@
-// import packages
 const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
@@ -21,32 +20,38 @@ mongoose
   })
   .catch(err => console.error(`Connection error ${err}`));
 
-// middleware
-// parsear bodys con json
+// todo el middleware aca abajo y antes del listen
 app.use(express.json());
-// usar cors
 app.use(cors());
-// logger para desarrollo
 app.use(morgan('dev'));
-// api router
 app.use('/api', require('./api/routes/note'));
 
-// error handlers (despues de las rutas de la API)
-// 404 not found
+// los middlewares se ejecutan en orden para todas las peticiones
+// salvo que no coincida la ruta
+// (solo para el 4to middleware en este caso)  
+app.use(express.json());                        // 1er middleware
+app.use(cors());                                // 2do middleware
+app.use(morgan('dev'));                         // 3er middleware
+app.use('/api', require('./api/routes/note'));  // 4to middleware
+// si el cliente NO hace una peticion a algun endpoint de la API
+// entonces usamos una ruta que devuelva un status code 404
+// 5to middleware (error 404 not found)
 app.use((req, res, next) => {
   const err = new Error('Not found');
   err.status = 404;
   next(err);
 });
-// algun error distinto a not found
-// defaultea a 500
+// no terminamos la cadena de middlewares ahi
+// la pasamos a un 6to middleware que responda al cliente
+// con el error 404 o 500 si vino de otro lado el problema
 app.use((err, req, res, next) => {
   res.status(err.status || 500);
-  // DEBUG: console.error(err.stack)
+  // para mas detalles usar: console.error(err.stack)
   res.json({ error: err.message });
 });
+
 
 // listen
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`)
-});
+});  
